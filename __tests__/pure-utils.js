@@ -232,6 +232,17 @@ describe('actionToPath(action, routesMap)', () => {
     expect(path).toEqual('/info')
   })
 
+  it('parse action into query and fragment: /info', () => {
+    const action = { type: 'INFO', payload: { query: { foo: 'bar' }, fragment: '#boo' } }
+    const routesMap = {
+      INFO: '/info',
+      INFO_PARAM: '/info/:param'
+    }
+
+    const path = actionToPath(action, routesMap) /*? */
+    expect(path).toEqual('/info?foo=bar#boo')
+  })
+
   it('parse action payload into path segment: /info/foo', () => {
     const action = { type: 'INFO_PARAM', payload: { param: 'foo' } }
     const routesMap = {
