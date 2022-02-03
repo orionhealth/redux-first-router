@@ -114,6 +114,7 @@ export type LocationState = {
   payload: Payload,
   query?: Object,
   search?: string,
+  fragment?: string,
   prev: Location,
   kind: ?string,
   history: ?HistoryData,
@@ -126,7 +127,8 @@ export type Location = {
   type: string,
   payload: Payload,
   query?: Object,
-  search?: string
+  search?: string,
+  fragment?: string
 }
 
 export type ActionMetaLocation = {
@@ -152,7 +154,8 @@ export type Meta = {
   notFoundPath?: string,
   navigation?: NavigationAction,
   query?: Object,
-  search?: string
+  search?: string,
+  fragment?: string
 }
 
 export type HistoryData = {
@@ -176,6 +179,7 @@ export type ReceivedAction = {
   meta?: Object,
   query?: Object,
   search?: string,
+  fragment?: string,
   navKey?: ?string
 }
 
@@ -209,7 +213,9 @@ export type History = {
 
 export type HistoryLocation = {
   pathname: string,
-  search?: string
+  search?: string,
+  // we refer to this element as a `fragment` internally. Histoy NPM module refers to it as a `hash`
+  hash?: string
 }
 
 export type HistoryAction = string
