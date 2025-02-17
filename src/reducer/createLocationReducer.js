@@ -2,6 +2,7 @@
 import { NOT_FOUND, ADD_ROUTES } from '../index'
 import isServer from '../pure-utils/isServer'
 import { nestHistory } from '../pure-utils/nestAction'
+import urlFromPath from '../pure-utils/urlFromPath'
 import type {
   LocationState,
   RoutesMap,
@@ -28,11 +29,18 @@ export default (initialState: LocationState, routesMap: RoutesMap) => (
   ) {
     const query = action.meta.location.current.query
     const search = action.meta.location.current.search
+    const fragment = action.meta.location.current.fragment
 
     return {
       pathname: action.meta.location.current.pathname,
       type: action.type,
-      payload: { ...action.payload },
+      // We add the query and fragment to the payload as its
+      // part of the route information as a convience for
+      // downstream apps to reload the current page using the
+      // current payload. Otherwise, apps have to look in
+      // different parts of the store to get the query/fragment data.
+      // This is a divergence from the parent project.
+      payload: { ...action.payload, ...(query && { query }), ...(fragment && { fragment }) },
       ...(query && { query, search }),
       prev: action.meta.location.prev,
       kind: action.meta.location.kind,
@@ -47,6 +55,7 @@ export default (initialState: LocationState, routesMap: RoutesMap) => (
       (typeof route === 'string' || route.path) &&
       (action.meta.location.current.pathname === state.pathname &&
         action.meta.location.current.search === state.search &&
+        action.meta.location.current.fragment === state.fragment &&
         action.meta.location.kind !== state.kind
       )
   ) {
@@ -67,14 +76,15 @@ export default (initialState: LocationState, routesMap: RoutesMap) => (
 
 export const getInitialState = (
   currentPathname: string,
-  meta: ?{ search?: string, query?: Object },
+  meta: ?{ search?: string, query?: Object, fragment?: String, },
   type: string,
   payload: Payload,
   routesMap: RoutesMap,
   history: History
 ): LocationState => ({
-  search: currentPathname.split('?')[1],
-  pathname: currentPathname.split('?')[0],
+  search: urlFromPath(currentPathname).search.substring(1),
+  pathname: urlFromPath(currentPathname).pathname,
+  fragment: urlFromPath(currentPathname).hash,
   type,
   payload,
   ...meta,

@@ -3,6 +3,7 @@ import { compilePath } from 'rudy-match-path'
 import { stripBasename } from 'rudy-history/PathUtils'
 import { NOT_FOUND, getOptions } from '../index'
 import objectValues from './objectValues'
+import urlFromPath from './urlFromPath';
 
 import type { RoutesMap, ReceivedAction, QuerySerializer } from '../flow-types'
 
@@ -13,13 +14,17 @@ export default (
   basename?: string | void = getOptions().basename,
   strict?: boolean | void = getOptions().strict
 ): ReceivedAction => {
-  const parts = pathname.split('?')
-  const search = parts[1]
+  const url = urlFromPath(pathname);
+  let search = url.search;
+  if (search && search.indexOf('?') === 0) {
+    search = search.substring(1)
+  }
   const query = search && serializer && serializer.parse(search)
+  const fragment = url.hash;
   const routes = objectValues(routesMap)
   const routeTypes = Object.keys(routesMap)
 
-  pathname = basename ? stripBasename(parts[0], basename) : parts[0]
+  pathname = basename ? stripBasename(url.pathname, basename) : url.pathname
 
   let i = 0
   let match
@@ -79,14 +84,17 @@ export default (
 
     const meta = {
       ...(userMeta ? { meta: userMeta } : {}),
-      ...(query ? { query } : {})
+      ...(query ? { query } : {}),
+      ...(fragment ? { fragment } : {})
     }
-    return { type, payload, meta }
+    // we store the fragment in the payload to make it easier for downstream apps to access the route data. Otherwise,
+    // apps need to look inside the meta object which is a burden. This is a divergence from the parent library
+    return { type, payload: { ...payload,  ...(query ? { query } : {}), ...(fragment ? { fragment } : {}) }, meta }
   }
 
   // This will basically will only end up being called if the developer is manually calling history.push().
   // Or, if visitors visit an invalid URL, the developer can use the NOT_FOUND type to show a not-found page to
-  const meta = { notFoundPath: pathname, ...(query ? { query } : {}) }
+  const meta = { notFoundPath: pathname, ...(query ? { query } : {}), ...(fragment ? { fragment } : {}) }
   return { type: NOT_FOUND, payload: {}, meta }
 }
 

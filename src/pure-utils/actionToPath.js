@@ -24,9 +24,14 @@ export default (
     (action.meta && action.meta.query) ||
     (action.payload && action.payload.query)
 
+  const fragment =
+    action.fragment ||
+    (action.meta && action.meta.fragment) ||
+    (action.payload && action.payload.fragment) || ''
+
   const search = query && serializer && serializer.stringify(query)
 
-  return search ? `${path}?${search}` : path
+  return search ? `${path}?${search}${fragment}` : `${path}${fragment}`
 }
 
 const _payloadToParams = (route: Route, params: Payload = {}): Params =>
